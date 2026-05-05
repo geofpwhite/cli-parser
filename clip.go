@@ -1,4 +1,4 @@
-package main
+package clip
 
 import (
 	"fmt"
@@ -37,7 +37,7 @@ type CommandNode struct {
 func (p *Parser) Parse(args []string) (func(...string) error, []string, bool) {
 	cur := &p.cmds
 	argIndex := 0
-	for cur.subCommands[args[argIndex]] != nil {
+	for argIndex < len(args) && cur.subCommands[args[argIndex]] != nil {
 		cur = cur.subCommands[args[argIndex]]
 		argIndex++
 	}
@@ -68,4 +68,24 @@ func (p *Parser) AddCommand(args []string, cmd func(...string) error) {
 		cur = cur.subCommands[arg]
 	}
 	cur.cmd = cmd
+}
+
+func (p *Parser) AddSubCommand(parent []string, subCommand string, cmd func(...string) error) {
+	cur := &p.cmds
+	for _, arg := range parent {
+		if cur.subCommands == nil {
+			cur.subCommands = make(map[string]*CommandNode)
+		}
+		if cur.subCommands[arg] == nil {
+			cur.subCommands[arg] = &CommandNode{}
+		}
+		cur = cur.subCommands[arg]
+	}
+	if cur.subCommands == nil {
+		cur.subCommands = make(map[string]*CommandNode)
+	}
+	if cur.subCommands[subCommand] == nil {
+		cur.subCommands[subCommand] = &CommandNode{}
+	}
+	cur.subCommands[subCommand].cmd = cmd
 }
